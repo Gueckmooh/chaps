@@ -3,6 +3,8 @@ import argparse
 
 from .verbosity import warn
 
+VERSION = "%(VERSION)s"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -13,7 +15,10 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-V", "--version", action="version", version="%(prog)s 0.0.0"
+        "-V",
+        "--version",
+        action="version",
+        version="%(prog)s {}".format(VERSION),
     )
 
     verbosity = parser.add_argument_group("verbosity")

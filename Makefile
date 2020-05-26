@@ -26,6 +26,7 @@ chaps: chapter_split/*.py # youtube_dl/*/*.py
 	  cp -pPR $$d/*.py zip/$$d/ ;\
 	done
 	touch -t 200001010101 zip/chapter_split/*.py # zip/chapter_split/*/*.py
+	find zip -type f -name "*.py" -exec sed "s/%(VERSION)s/$(GIT_COMMIT)/g" -i {} \;
 	mv zip/chapter_split/__main__.py zip/
 	cd zip ; zip -q ../chaps chapter_split/*.py chapter_split/*/*.py __main__.py
 	rm -rf zip
