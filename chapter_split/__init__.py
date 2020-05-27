@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 from .options import parse_args
 
 from .verbosity import (
@@ -12,7 +14,7 @@ from .verbosity import (
     VVVERBOSE_LEVEL,
 )
 
-from .ffmpeg import get_chapters
+from .ffmpeg import *
 
 from .util import sec_to_hour
 
@@ -21,7 +23,7 @@ from .util import sec_to_hour
 # ffprobe -i f -print_format json -show_chapters -loglevel error
 
 
-def parse_chapters(chapters):
+def prettify_chapters(chapters):
     chaps = []
     for chapter in chapters:
         chaps += [
@@ -47,9 +49,10 @@ def main():
     elif v == 3:
         verbosity_set_level(VVVERBOSE_LEVEL, debug=args.debug)
     vvprint("Given file is {}".format(args.file))
-    chapters = get_chapters(args.file)
-    chapters = parse_chapters(chapters)
-    vvvprint(chapters)
+    if args.printchapters:
+        print_chapters(args.file, get_infos(args.file))
+        sys.exit(0)
+    split_file_on_chapters(args.file, get_infos(args.file))
 
 
 if __name__ == "__main__":

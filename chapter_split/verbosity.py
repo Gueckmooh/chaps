@@ -66,3 +66,4 @@ vprint = logger.vprint
 vvprint = logger.vvprint
 vvvprint = logger.vvvprint
 warn = logger.warning
+err = logger.error

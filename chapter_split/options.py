@@ -1,9 +1,12 @@
 "Options module"
 import argparse
+import sys
 
-from .verbosity import warn
+from .verbosity import warn, err
 
 VERSION = "%(VERSION)s"
+
+ARGS = None
 
 
 def parse_args():
@@ -19,6 +22,63 @@ def parse_args():
         "--version",
         action="version",
         version="%(prog)s {}".format(VERSION),
+    )
+
+    parser.add_argument(
+        "--restrict-filenames",
+        action="store_true",
+        dest="restrictfilenames",
+        default=False,
+        help="""Restrict filenames to only ASCII characters, and avoid "&"
+        and spaces in filenames""",
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        action="store",
+        default="%(title)s-%(chapter-title)s.%(ext)s",
+        dest="outtmpl",
+        metavar="TEMPLATE",
+        help="""Output filename template, see the "OUTPUT TEMPLATE" for all
+            the info. [Default: "%%(title)s-%%(chapter-title)s.%%(ext)s"]""",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--copy",
+        action="store_true",
+        default=False,
+        dest="codeccopy",
+        help="Indicate to ffmpeg that the stream is not to be re-encoded.",
+    )
+
+    parser.add_argument(
+        "-D",
+        "--dry-run",
+        action="store_true",
+        default=False,
+        dest="dryrun",
+        help="Do not write anything to disk.",
+    )
+
+    parser.add_argument(
+        "--only-chapters",
+        action="store",
+        default=None,
+        dest="onlychapters",
+        metavar="LIST",
+        help="""Indicate the chapters to extract, LIST is a comma separated
+        integer list e.g., 1,2,5. This indicates to the program to extract only
+        chapters 1, 2 and 5""",
+    )
+
+    parser.add_argument(
+        "--print-chapters",
+        action="store_true",
+        default=False,
+        dest="printchapters",
+        help="Prints chapter list.",
     )
 
     verbosity = parser.add_argument_group("verbosity")
@@ -50,14 +110,28 @@ def parse_args():
         help="Print debug infos.",
     )
 
-    _args = parser.parse_args()
+    args = parser.parse_args()
 
-    if _args.quiet and _args.verbose:
+    if args.quiet and args.verbose:
         warn("Warning, -q and -v are mutual exclusive arguments")
-    elif not _args.quiet and _args.verbose is None:
-        _args.verbose = 1
-    elif not _args.quiet and _args.verbose > 3:
+    elif not args.quiet and args.verbose is None:
+        args.verbose = 1
+    elif not args.quiet and args.verbose > 3:
         warn("Warning, no need to pass more than 3 v's")
-        _args.verbose = 3
+        args.verbose = 3
 
-    return _args
+    if args.onlychapters:
+        try:
+            args.onlychapters = [int(x) for x in args.onlychapters.split(",")]
+        except ValueError:
+            err("--only-chapters option only accepts integer list")
+            sys.exit(1)
+
+    global ARGS
+    ARGS = args
+
+    return args
+
+
+def get_args():
+    return ARGS
