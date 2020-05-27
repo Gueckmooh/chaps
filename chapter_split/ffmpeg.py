@@ -11,8 +11,9 @@ from .verbosity import (
 )
 
 
-def get_chapters(filename):
-    vprint("[ffprobe] get chapters...")
+def get_infos(filename):
+    vprint("[chaps] Getting infos from file...")
+    vprint("[ffprobe] Getting json infos...")
     command = [
         "ffprobe",
         "-i",
@@ -20,12 +21,18 @@ def get_chapters(filename):
         "-print_format",
         "json",
         "-show_chapters",
+        "-show_format",
         "-loglevel",
         "error",
     ]
     vvprint("Command is {}".format(" ".join(command)))
     output = sp.check_output(command)
-    j = json.loads(output)
+    return json.loads(output)
+
+
+def get_chapters(filename):
+    vprint("[chaps] Extract chapters from json infos...")
+    j = get_infos(filename)
     chapters = j["chapters"]
     vvprint("Found {:d} chapters".format(len(chapters)))
     return chapters
