@@ -7,7 +7,6 @@ QUIET ?= @
 SHELL=/bin/bash
 
 GIT_COMMIT=$(shell git describe --always --dirty)
-$(info $(GIT_COMMIT))
 
 codetest:
 	$(QUIET)flake8 . && echo OK
