@@ -2,6 +2,8 @@
 import math
 import re
 import itertools
+import sys
+from shlex import quote
 
 ACCENT_CHARS = dict(
     zip(
@@ -97,3 +99,19 @@ def gen_filename(template, chapter, metadata, fmt):
     filename = filename.replace("%(title)s", metadata["title"])
     filename = filename.replace("%(ext)s", fmt["format_name"])
     return filename
+
+
+def get_filesystem_encoding():
+    encoding = sys.getfilesystemencoding()
+    return encoding if encoding is not None else "utf-8"
+
+
+def shell_quote(args):
+    quoted_args = []
+    encoding = get_filesystem_encoding()
+    for a in args:
+        if isinstance(a, bytes):
+            # We may get a filename encoded with 'encodeFilename'
+            a = a.decode(encoding)
+        quoted_args.append(quote(a))
+    return " ".join(quoted_args)

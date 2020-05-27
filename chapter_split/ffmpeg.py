@@ -3,11 +3,7 @@
 import json
 import subprocess as sp
 
-from .verbosity import (
-    vprint,
-    vvprint,
-    vvvprint,
-)
+from .verbosity import vprint, vvprint, vvvprint, err
 
 
 from .util import *
@@ -76,6 +72,25 @@ def get_format_from_json(jinfos):
     return fmt
 
 
+def run_ffmpeg(input_path, out_path, opts, dry=False):
+    files_cmd = []
+
+    cmd = ["ffmpeg", "-y", "-i", input_path]
+    cmd += opts
+    cmd += ["-loglevel", "repeat+info"]
+    cmd += [out_path]
+
+    vvprint("[debug] ffmpeg command line: {}".format(shell_quote(cmd)))
+
+    if not dry:
+        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE,)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            stderr = stderr.decode("utf-8", "replace")
+            err(stderr.strip().split("\n")[-1])
+            sys.exit(1)
+
+
 def split_file_on_chapters(filename, jinfos):
     chapters = get_chapter_from_json(jinfos)
     metadata = get_metadatas_from_json(jinfos)
@@ -90,9 +105,6 @@ def split_file_on_chapters(filename, jinfos):
         start = msec_to_hour(int(chap["start"]))
         end = msec_to_hour(int(chap["end"]))
         command = [
-            "ffmpeg",
-            "-i",
-            filename,
             "-ss",
             start,
             "-to",
@@ -100,9 +112,7 @@ def split_file_on_chapters(filename, jinfos):
         ]
         if args.codeccopy:
             command += ["-codec", "copy"]
-        command += [outfile]
-
-        vvprint("Command is {}".format(" ".join(command)))
+        run_ffmpeg(filename, outfile, command, dry=args.dryrun)
 
 
 def print_chapters(filename, jinfos):
