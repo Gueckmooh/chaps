@@ -2,11 +2,18 @@
 
 import json
 import subprocess as sp
+import sys
 
 from .verbosity import vprint, vvprint, vvvprint, err
 
 
-from .util import *
+from .util import (
+    sanitize_filename,
+    gen_filename,
+    msec_to_hour,
+    sec_to_hour,
+    shell_quote,
+)
 
 
 from .options import get_args
@@ -73,8 +80,6 @@ def get_format_from_json(jinfos):
 
 
 def run_ffmpeg(input_path, out_path, opts, dry=False):
-    files_cmd = []
-
     cmd = ["ffmpeg", "-y", "-i", input_path]
     cmd += opts
     cmd += ["-loglevel", "repeat+info"]

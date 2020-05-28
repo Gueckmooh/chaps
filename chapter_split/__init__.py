@@ -14,7 +14,7 @@ from .verbosity import (
     VVVERBOSE_LEVEL,
 )
 
-from .ffmpeg import *
+from . import ffmpeg
 
 from .util import sec_to_hour
 
@@ -50,9 +50,9 @@ def main():
         verbosity_set_level(VVVERBOSE_LEVEL, debug=args.debug)
     vvprint("Given file is {}".format(args.file))
     if args.printchapters:
-        print_chapters(args.file, get_infos(args.file))
+        ffmpeg.print_chapters(args.file, ffmpeg.get_infos(args.file))
         sys.exit(0)
-    split_file_on_chapters(args.file, get_infos(args.file))
+    ffmpeg.split_file_on_chapters(args.file, ffmpeg.get_infos(args.file))
 
 
 if __name__ == "__main__":
