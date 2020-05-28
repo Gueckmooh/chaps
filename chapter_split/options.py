@@ -9,12 +9,40 @@ VERSION = "%(VERSION)s"
 ARGS = None
 
 
+def _commasep_intlist(string):
+    lst = string.split(",")
+    ret = []
+    for val in lst:
+        try:
+            ret += [int(val)]
+        except ValueError:
+            msg = "in '{}': '{}' is not an integer".format(string, val)
+            raise argparse.ArgumentTypeError(msg)
+    return ret
+
+
+def _filetype(mode):
+    def checker(string):
+        try:
+            f = open(string, mode)
+            f.close()
+        except FileNotFoundError:
+            msg = "file {} not found".format(string)
+            raise argparse.ArgumentTypeError(msg)
+        return string
+
+    return checker
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Cut audio/video file on chapters using ffmpeg."
     )
     parser.add_argument(
-        "file", metavar="FILE", type=str, help="The name of the input file.",
+        "file",
+        metavar="FILE",
+        type=_filetype("r"),
+        help="The name of the input file.",
     )
 
     parser.add_argument(
@@ -68,12 +96,14 @@ def parse_args():
         default=None,
         dest="onlychapters",
         metavar="LIST",
+        type=_commasep_intlist,
         help="""Indicate the chapters to extract, LIST is a comma separated
         integer list e.g., 1,2,5. This indicates to the program to extract only
         chapters 1, 2 and 5""",
     )
 
     parser.add_argument(
+        "-p",
         "--print-chapters",
         action="store_true",
         default=False,
@@ -120,12 +150,12 @@ def parse_args():
         warn("Warning, no need to pass more than 3 v's")
         args.verbose = 3
 
-    if args.onlychapters:
-        try:
-            args.onlychapters = [int(x) for x in args.onlychapters.split(",")]
-        except ValueError:
-            err("--only-chapters option only accepts integer list")
-            sys.exit(1)
+    # if args.onlychapters:
+    #     try:
+    #         args.onlychapters = [int(x) for x in args.onlychapters.split(",")]
+    #     except ValueError:
+    #         err("--only-chapters option only accepts integer list")
+    #         sys.exit(1)
 
     global ARGS
     ARGS = args
