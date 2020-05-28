@@ -18,25 +18,6 @@ from . import ffmpeg
 
 from .util import sec_to_hour
 
-# re.findall ("('.*'|\".*\"|\S+)", s)
-
-# ffprobe -i f -print_format json -show_chapters -loglevel error
-
-
-def prettify_chapters(chapters):
-    chaps = []
-    for chapter in chapters:
-        chaps += [
-            {
-                "start": "{}".format(
-                    sec_to_hour(int(chapter["start"]) / 1000)
-                ),
-                "end": "{}".format(sec_to_hour(int(chapter["end"]) / 1000)),
-                "title": chapter["tags"]["title"],
-            }
-        ]
-    return chaps
-
 
 def main():
     args = parse_args()
