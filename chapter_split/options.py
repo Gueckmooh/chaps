@@ -140,6 +140,15 @@ def parse_args():
         help="Print debug infos.",
     )
 
+    verbosity.add_argument(
+        "-P",
+        "--progress",
+        action="store_true",
+        dest="progress",
+        default=False,
+        help="Print progress bar",
+    )
+
     args = parser.parse_args()
 
     if args.quiet and args.verbose:
