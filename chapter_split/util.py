@@ -115,3 +115,18 @@ def shell_quote(args):
             a = a.decode(encoding)
         quoted_args.append(quote(a))
     return " ".join(quoted_args)
+
+
+def yes_no_p(message, default="N"):
+    if default not in ["Y", "N", "y", "n"]:
+        raise Exception("Wrong parameter in yes_no_p")
+    yn = "[Y/n]" if default in ["Y", "y"] else "[y/N]"
+    yes = ["Y", "y", ""] if default in ["Y", "y"] else ["Y", "y"]
+    no = ["N", "n", ""] if default in ["N", "n"] else ["N", "n"]
+    message += " " + yn + " "
+    while True:
+        ret = input(message)
+        if ret in yes:
+            return True
+        elif ret in no:
+            return False
