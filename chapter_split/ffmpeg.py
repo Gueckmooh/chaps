@@ -134,7 +134,7 @@ def run_ffmpeg(
                             )
                             bar.set_percent(percentage)
                             percentmsg.set_value(
-                                " ({: 3d}%)".format(percentage)
+                                " ({:3d}%)".format(percentage)
                             )
                             sys.stdout.write("{}\r".format(line))
                             break
