@@ -41,11 +41,13 @@ chaps: chapter_split/*.py # youtube_dl/*/*.py
 install: chaps
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 chaps $(DESTDIR)$(BINDIR)
-	# install -d $(DESTDIR)$(MANDIR)/man1
-	# install -m 644 chaps.1 $(DESTDIR)$(MANDIR)/man1
+	install -d $(DESTDIR)$(MANDIR)/man1
+	install -m 644 doc/chaps.1 $(DESTDIR)$(MANDIR)/man1
 	# install -d $(DESTDIR)$(SYSCONFDIR)/bash_completion.d
 	# install -m 644 chaps.bash-completion $(DESTDIR)$(SYSCONFDIR)/bash_completion.d/chapsb
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/chaps
 	if test -z "$(ls -A $(DESTDIR)$(BINDIR))"; then rmdir $(DESTDIR)$(BINDIR); fi
+	rm -f $(DESTDIR)$(MANDIR)/man1/chaps.1
+	if test -z "$(ls -A $(DESTDIR)$(MANDIR))"; then rmdir $(DESTDIR)$(MANDIR); fi
