@@ -159,13 +159,6 @@ def parse_args():
         warn("Warning, no need to pass more than 3 v's")
         args.verbose = 3
 
-    # if args.onlychapters:
-    #     try:
-    #         args.onlychapters = [int(x) for x in args.onlychapters.split(",")]
-    #     except ValueError:
-    #         err("--only-chapters option only accepts integer list")
-    #         sys.exit(1)
-
     global ARGS
     ARGS = args
 
