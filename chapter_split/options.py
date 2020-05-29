@@ -3,7 +3,7 @@ import argparse
 import sys
 
 from .verbosity import warn, err
-from .version import __version__, __commit__
+from .version import __version__, __commit__, __tag__
 
 ARGS = None
 
@@ -34,7 +34,7 @@ def _filetype(mode):
 
 
 def get_version():
-    if __version__ == __commit__:
+    if (__version__ == __tag__) or __commit__ == "":
         return "%(prog)s {}".format(__version__)
     else:
         return "%(prog)s {} (commit {})".format(__version__, __commit__)

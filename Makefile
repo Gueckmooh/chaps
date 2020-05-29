@@ -11,7 +11,7 @@ QUIET ?= @
 SHELL=/bin/bash
 
 GIT_COMMIT=$(shell git describe --always)
-GIT_TAG=$(shell git describe --abbrev=0 2>/dev/null)
+GIT_TAG=$(shell git describe --tags 2>/dev/null)
 
 codetest:
 	$(QUIET)flake8 . && echo OK
@@ -30,7 +30,7 @@ chaps: chapter_split/*.py # youtube_dl/*/*.py
 	  cp -pPR $$d/*.py zip/$$d/ ;\
 	done
 	touch -t 200001010101 zip/chapter_split/*.py # zip/chapter_split/*/*.py
-	find zip -type f -name "version.py" -exec sed -e "s/%%VERSION%%/$(GIT_TAG)/g" -e "s/%%COMMIT%%/$(GIT_COMMIT)/g" -i {} \;
+	find zip -type f -name "version.py" -exec sed -e "s/%%TAG%%/$(GIT_TAG)/g" -e "s/%%COMMIT%%/$(GIT_COMMIT)/g" -i {} \;
 	mv zip/chapter_split/__main__.py zip/
 	cd zip ; zip -q ../chaps chapter_split/*.py chapter_split/*/*.py __main__.py
 	rm -rf zip
