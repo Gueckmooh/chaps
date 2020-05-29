@@ -1,0 +1,71 @@
+.TH "CHAPS" "1" "" "" ""
+.hy
+.SH CHAPter Split
+.PP
+chaps - extract chapters from media files
+.SS SYNOPSIS
+.PP
+\f[B]chaps\f[R] is a command-line program to split media files
+according to ckapters.  It uses FFmpeg and FFprobe to perform such
+extraction.  Some functions and features are strongly inspired by
+\f[B]youtube-dl\f[R].
+.SH OPTIONS
+.TP
+-h, --help
+Show this help message and exit
+.TP
+-V, --version
+Show program's version number and exit
+.TP
+--restrict-filenames
+Restrict filenames to only ASCII characters, and avoid \[dq]&\[dq] and
+spaces in filenames
+.TP
+-o \f[I]TEMPLATE\f[R], --output \f[I]TEMPLATE\f[R]
+Output filename template, see the \[dq]OUTPUT TEMPLATE\[dq] for all
+the info. [Default: \[dq]%(title)s-%(chapter-title)s.%(ext)s\[dq]]
+.TP
+-c, --copy
+Indicate to ffmpeg that the stream is not to be re-encoded.
+.TP
+-D, --dry-run
+Do not write anything to disk.
+.TP
+--only-chapters \f[I]LIST\f[R]
+Indicate the chapters to extract, \f[I]LIST\f[R] is a comma separated
+integer list e.g., 1,2,5. This indicates to the program to extract
+only chapters 1, 2 and 5
+.TP
+-p, --print-chapters
+Prints chapter list.
+.SS Verbosity Options
+.TP
+-v, --verbose
+Makes the program more talkative, duplicate for more verbosity (e.g.,
+-vvv).
+.TP
+-q, --quiet
+Makes the program quiet.
+.TP
+-d, --debug
+Print debug infos.
+.TP
+-P, --progress
+Print progress bar
+.SH OUTPUT TEMPLATE
+.PP
+The \f[C]-o\f[R] option allows users to indicate a template for the
+output file names.
+It is formated using \f[B]youtube-dl\f[R] flavour.
+.PP
+Allowed names along with sequence type are:
+.IP \[bu] 2
+\f[C]chapter-title\f[R] (string): Chapter title
+.IP \[bu] 2
+\f[C]chapter-id\f[R] (string): Chapter identifier
+.IP \[bu] 2
+\f[C]chapter-index\f[R] (string): Chapter index
+.IP \[bu] 2
+\f[C]title\f[R] (string): Video title
+.IP \[bu] 2
+\f[C]ext\f[R] (string): Video filename extension
