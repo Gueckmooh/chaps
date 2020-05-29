@@ -1,7 +1,11 @@
-.PHONY: all clean test codetest
+.PHONY: all clean test codetest install uninstall
 
 all: chaps
 
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/man
+SHAREDIR ?= $(PREFIX)/share
 PYTHON ?= /usr/bin/env python
 QUIET ?= @
 SHELL=/bin/bash
@@ -33,3 +37,15 @@ chaps: chapter_split/*.py # youtube_dl/*/*.py
 	cat chaps.zip >> chaps
 	rm chaps.zip
 	chmod a+x chaps
+
+install: chaps
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 chaps $(DESTDIR)$(BINDIR)
+	# install -d $(DESTDIR)$(MANDIR)/man1
+	# install -m 644 chaps.1 $(DESTDIR)$(MANDIR)/man1
+	# install -d $(DESTDIR)$(SYSCONFDIR)/bash_completion.d
+	# install -m 644 chaps.bash-completion $(DESTDIR)$(SYSCONFDIR)/bash_completion.d/chapsb
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/chaps
+	if test -z "$(ls -A $(DESTDIR)$(BINDIR))"; then rmdir $(DESTDIR)$(BINDIR); fi
