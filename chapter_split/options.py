@@ -3,8 +3,7 @@ import argparse
 import sys
 
 from .verbosity import warn, err
-
-VERSION = "%(VERSION)s"
+from .version import __version__, __commit__
 
 ARGS = None
 
@@ -34,6 +33,13 @@ def _filetype(mode):
     return checker
 
 
+def get_version():
+    if __version__ == __commit__:
+        return "%(prog)s {}".format(__version__)
+    else:
+        return "%(prog)s {} (commit {})".format(__version__, __commit__)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Cut audio/video file on chapters using ffmpeg."
@@ -46,10 +52,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version="%(prog)s {}".format(VERSION),
+        "-V", "--version", action="version", version=get_version(),
     )
 
     parser.add_argument(
