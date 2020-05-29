@@ -18,7 +18,7 @@ codetest:
 test:
 	$(QUIET)echo "Runing tests..."
 	$(QUIET)nosetests --with-coverage --cover-package=chapter_split --cover-html \
---cover-erase --cover-branches --cover-min-percentage=95 --verbose test
+--cover-erase --cover-branches --verbose test # --cover-min-percentage=95
 	$(QUIET)echo "Checking code formating..."
 	$(QUIET)$(MAKE) --no-print-directory codetest
 
