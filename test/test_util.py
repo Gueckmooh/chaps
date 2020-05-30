@@ -72,13 +72,13 @@ def make_print_seq(seq):
 class TestJson(unittest.TestCase):
     def test_yes_no_p(self):
         with patch("builtins.input", return_value="y"):
-            self.assertEqual(util.yes_no_p("Test", "y"), True)
+            self.assertTrue(util.yes_no_p("Test", "y"))
         with patch("builtins.input", return_value="y"):
-            self.assertEqual(util.yes_no_p("Test", "n"), True)
+            self.assertTrue(util.yes_no_p("Test", "n"))
         with patch("builtins.input", return_value="n"):
-            self.assertEqual(util.yes_no_p("Test", "y"), False)
+            self.assertFalse(util.yes_no_p("Test", "y"))
         with patch("builtins.input", return_value="n"):
-            self.assertEqual(util.yes_no_p("Test", "n"), False)
+            self.assertFalse(util.yes_no_p("Test", "n"))
         with patch("builtins.input", return_value="y"):
             try:
                 util.yes_no_p("Test", "o")
@@ -88,7 +88,7 @@ class TestJson(unittest.TestCase):
         with patch(
             "builtins.input", new_callable=make_print_seq(["o", "v", "y"])
         ):
-            self.assertEqual(util.yes_no_p("Test", "y"), True)
+            self.assertTrue(util.yes_no_p("Test", "y"))
 
     def test_search_all(self):
         res = util.search_all(r"^.*(((\d|)\d:|)\d|)\d:\d\d.*$", comment_1)
@@ -111,6 +111,196 @@ class TestJson(unittest.TestCase):
         self.assertEqual(util.msec_to_hour(1524), "00:00:01.524")
         self.assertEqual(util.msec_to_hour(67546), "00:01:07.546")
         self.assertEqual(util.msec_to_hour(98479), "00:01:38.478")
+
+    def test_sanitize_filename(self):
+        ltest = [
+            ("with spaces", "with_spaces"),
+            ("with é", "with_e"),
+            ("with ?", "with"),
+            ('with "quotes"', "with_quotes"),
+            ("with: colon", "with_-_colon"),
+            ("with \\", "with"),
+            ("with /", "with"),
+            ("with |", "with"),
+            ("with *", "with"),
+            ("with <>", "with"),
+            ("with てすつ", "with"),
+            ("with 00:34:00", "with_00_34_00"),
+            ("with   more     spaces", "with_more_spaces"),
+            ("   with spaces   ", "with_spaces"),
+            ("-_with_-", "with_-"),
+            ("-with-", "_with-"),
+            ("", "_"),
+        ]
+        for (filename, exp) in ltest:
+            print(
+                'Testing\
+                util.sanitize_filename("{}", True)'.format(
+                    filename
+                )
+            )
+            self.assertEqual(util.sanitize_filename(filename, True), exp)
+
+        ltest = [
+            ("with spaces", "with_spaces"),
+            ("with é", "with_e"),
+            ("with ?", "with_"),
+            ('with "quotes"', "with_quotes"),
+            ("with: colon", "with_-_colon"),
+            ("with \\", "with__"),
+            ("with /", "with__"),
+            ("with |", "with__"),
+            ("with *", "with__"),
+            ("with <>", "with___"),
+            ("with てすつ", "with____"),
+            ("with 00:34:00", "with_00_34_00"),
+            ("with   more     spaces", "with___more_____spaces"),
+            ("   with spaces   ", "___with_spaces___"),
+            ("-_with_-", "-_with_-"),
+            ("-with-", "-with-"),
+            ("", ""),
+        ]
+        for (filename, exp) in ltest:
+            print(
+                'Testing \
+                util.sanitize_filename("{}", True, is_id=True)'.format(
+                    filename
+                )
+            )
+            self.assertEqual(
+                util.sanitize_filename(filename, True, is_id=True), exp
+            )
+
+        ltest = [
+            ("with spaces", "with spaces"),
+            ("with é", "with é"),
+            ("with ?", "with "),
+            ('with "quotes"', "with 'quotes'"),
+            ("with: colon", "with - colon"),
+            ("with \\", "with "),
+            ("with /", "with "),
+            ("with |", "with "),
+            ("with *", "with "),
+            ("with <>", "with "),
+            ("with てすつ", "with てすつ"),
+            ("with 00:34:00", "with 00_34_00"),
+            ("with   more     spaces", "with   more     spaces"),
+            ("   with spaces   ", "   with spaces   "),
+            ("-_with_-", "__with_-"),
+            ("-with-", "_with-"),
+            ("", "_"),
+        ]
+        # for (filename, exp) in ltest:
+        #     self.assertEqual(util.sanitize_filename(filename, False), exp)
+
+        ltest = [
+            ("with spaces", "with spaces"),
+            ("with é", "with é"),
+            ("with ?", "with "),
+            ('with "quotes"', "with 'quotes'"),
+            ("with: colon", "with - colon"),
+            ("with \\", "with _"),
+            ("with /", "with _"),
+            ("with |", "with _"),
+            ("with *", "with _"),
+            ("with <>", "with __"),
+            ("with てすつ", "with てすつ"),
+            ("with 00:34:00", "with 00_34_00"),
+            ("with   more     spaces", "with   more     spaces"),
+            ("   with spaces   ", "   with spaces   "),
+            ("-_with_-", "-_with_-"),
+            ("-with-", "-with-"),
+            ("", ""),
+        ]
+        for (filename, exp) in ltest:
+            print(
+                'Testing\
+                util.sanitize_filename("{}", is_id=True)'.format(
+                    filename
+                )
+            )
+            self.assertEqual(util.sanitize_filename(filename, is_id=True), exp)
+
+    def test_gen_filename(self):
+        chapter = {
+            "tags": {"title": "chapter-title"},
+            "id": 340,
+        }
+        metadata = {"title": "media-title"}
+        fmt = {"format_name": "mp3"}
+        ltest = [
+            (
+                "%(chapter-id)s-%(chapter-title)s.%(ext)s",
+                "340-chapter-title.mp3",
+            ),
+            (
+                "%(chapter-index)s-%(chapter-title)s.%(ext)s",
+                "341-chapter-title.mp3",
+            ),
+            (
+                "%(title)s-%(chapter-index)s.%(chapter-title)s.%(ext)s",
+                "media-title-341.chapter-title.mp3",
+            ),
+        ]
+        for (template, exp) in ltest:
+            print(
+                'Testing\
+                util.gen_filename("{}", chapter, metadata, fmt)'.format(
+                    template
+                )
+            )
+            self.assertEqual(
+                util.gen_filename(template, chapter, metadata, fmt), exp
+            )
+
+    def test_get_filesystem_encoding(self):
+        encoding = sys.getfilesystemencoding()
+        self.assertEqual(util.get_filesystem_encoding(), encoding)
+
+    def test_shell_quote(self):
+        encoding = sys.getfilesystemencoding()
+        ltest = [(["ffmpeg", "-o", "bla blip"], "ffmpeg -o 'bla blip'")]
+        for args, exp in ltest:
+            self.assertEqual(util.shell_quote(args), exp)
+            self.assertEqual(
+                util.shell_quote([x.encode(encoding) for x in args]), exp,
+            )
+
+    def test_parse_duration(self):
+        ltest = [
+            ("0.35", 0.35),
+            ("42", 42.0),
+            ("03:40", 220.0),
+            ("1:35:44", 5744.0),
+            ("4:3:2:1", 356521.0),
+            ("42s", 42.0),
+            ("42 sec", 42.0),
+            ("42 second", 42.0),
+            ("42seconds", 42.0),
+            ("3m40s", 220.0),
+            ("3min 40sec", 220.0),
+            ("3minute40second", 220.0),
+            ("3 minutes 40 s", 220.0),
+            ("1h3m40s", 3820.0),
+            ("1hour 3min 40sec", 3820.0),
+            ("1 hours 3minute40second", 3820.0),
+            ("3d T1h3m40s", 263020.0),
+            ("3 day T1hour 3min 40sec", 263020.0),
+            ("3daysT1 hours 3minute40second", 263020.0),
+            ("1.30 hours", 4680.0),
+            ("30.50mins", 1830.0),
+            ("30.50 minutes", 1830.0),
+            ("pouet", None),
+            (None, None),
+        ]
+        for duration, exp in ltest:
+            print(
+                """Testing\
+                util.parse_duration("{}")""".format(
+                    duration
+                )
+            )
+            self.assertEqual(util.parse_duration(duration), exp)
 
 
 def main():
