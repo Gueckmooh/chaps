@@ -4,6 +4,10 @@ This program aims to extract chapters from media files and, in the
 future, will target chapter manipulation in media file (add, remove,
 print, extract..).
 
+## BUILD STATUS
+
+![chaps build](https://github.com/Gueckmooh/chaps/workflows/chaps%20build/badge.svg)
+
 ## INSTALLATION
 
 To install this script on Linux type:
