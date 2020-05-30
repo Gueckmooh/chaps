@@ -27,5 +27,4 @@ exclude_lines =
 
 ignore_errors = True
 omit =
-    chapter_split/verbosity.py
     chapter_split/options.py
