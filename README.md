@@ -33,6 +33,9 @@ functions and features are strongly inspired by **youtube-dl**.
                              separated integer list e.g., 1,2,5. This indicates
                              to the program to extract only chapters 1, 2 and 5
     -p, --print-chapters     Prints chapter list.
+    -C FILE, --chapter-file FILE
+                             Use FILE to get chapters. See "CHAPTER FILE" for
+                             more information.
 
 ### Verbosity Options
     -v, --verbose            Makes the program more talkative, duplicate for
@@ -53,3 +56,15 @@ Allowed names along with sequence type are:
  - `chapter-index` (string): Chapter index
  - `title` (string): Video title
  - `ext` (string): Video filename extension
+
+## CHAPTER FILE
+
+The `-C` option allows user to write chapter timestamps in addition to
+chapter title in a file and use it to split media according to those
+chapters. This is usefull if your media file does not have any chapter
+or if you want different chapter titles/timestamps.
+
+Each line with a timestamp is parsed and the content of the line
+without the timestamp becomes a chapter. This way you can take any
+**youtube comment** with timestamps, paste it in a file and use it to
+split media.
