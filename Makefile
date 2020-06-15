@@ -49,6 +49,7 @@ install: chaps
 
 uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/chaps
-	if test -z "$(ls -A $(DESTDIR)$(BINDIR))"; then rmdir $(DESTDIR)$(BINDIR); fi
+	if test -z "$(ls -A $(DESTDIR)$(BINDIR))" -a -d $(DESTDIR)$(BINDIR); then rmdir $(DESTDIR)$(BINDIR); fi
 	rm -f $(DESTDIR)$(MANDIR)/man1/chaps.1
-	if test -z "$(ls -A $(DESTDIR)$(MANDIR))"; then rmdir $(DESTDIR)$(MANDIR); fi
+	if test -z "$(ls -A $(DESTDIR)$(MANDIR)/man1)" -a -d $(DESTDIR)$(MANDIR)/man1; then rmdir $(DESTDIR)$(MANDIR)/man1; fi
+	if test -z "$(ls -A $(DESTDIR)$(MANDIR))" -a -d $(DESTDIR)$(MANDIR); then rmdir $(DESTDIR)$(MANDIR); fi
