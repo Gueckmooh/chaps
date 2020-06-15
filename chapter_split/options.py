@@ -114,6 +114,17 @@ def parse_args():
         help="Prints chapter list.",
     )
 
+    parser.add_argument(
+        "-C",
+        "--chapter-file",
+        type=_filetype("r"),
+        action="store",
+        metavar="FILE",
+        default=None,
+        dest="chapter_file",
+        help="""Use FILE to get chapters.""",
+    )
+
     verbosity = parser.add_argument_group("verbosity")
 
     verbosity.add_argument(

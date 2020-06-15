@@ -146,8 +146,9 @@ def run_ffmpeg(
             sys.exit(1)
 
 
-def split_file_on_chapters(filename, jinfos):
-    chapters = get_chapter_from_json(jinfos)
+def split_file_on_chapters(filename, jinfos, chapters=None):
+    if chapters is None:
+        chapters = get_chapter_from_json(jinfos)
     metadata = get_metadatas_from_json(jinfos)
     fmt = get_format_from_json(jinfos)
     args = get_args()

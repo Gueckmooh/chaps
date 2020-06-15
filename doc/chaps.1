@@ -34,10 +34,14 @@ Do not write anything to disk.
 --only-chapters \f[I]LIST\f[R]
 Indicate the chapters to extract, \f[I]LIST\f[R] is a comma separated
 integer list e.g., 1,2,5. This indicates to the program to extract
-only chapters 1, 2 and 5
+only chapters 1, 2 and 5.
 .TP
 -p, --print-chapters
 Prints chapter list.
+.TP
+-C \f[I]FILE\f[R], --chapter-file \f[I]FILE\f[R]
+Use \f[I]FILE\f[R] to get chapters. See \[dq]CHAPTER FILE\[dq] for more
+information.
 .SS Verbosity Options
 .TP
 -v, --verbose
@@ -69,7 +73,18 @@ Allowed names along with sequence type are:
 \f[C]title\f[R] (string): Video title
 .IP \[bu] 2
 \f[C]ext\f[R] (string): Video filename extension
-
+.SH CHAPTER FILE
+.PP
+The \f[C]-C\f[R] option allows user to write chapter timestamps in
+addition to chapter title in a file and use it to split media
+according to those chapters. This is usefull if your media file does
+not have any chapter or if you want different chapter
+titles/timestamps.
+.PP
+Each line with a timestamp is parsed and the content of the line
+without the timestamp becomes a chapter. This way you can take any
+\f[B]youtube comment\f[R] with timestamps, paste it in a file and use
+it to split media.
 .SH BUGS
 Bugs and suggestions should be reportes to
 <https://github.com/gueckmooh/chaps/issues>.
