@@ -105,12 +105,11 @@ def run_ffmpeg(
             stdin=sp.PIPE,
             universal_newlines=True,
         )
-        if status and args.njobs == 1:
+        if status and args.njobs == 1 and not args.codeccopy:
             while True:
                 try:
                     stdout, stderr = p.communicate(timeout=1)
-                    if not args.codeccopy:
-                        status.current_progress.set_value(1)
+                    status.current_progress.set_value(1)
                     sys.stdout.write("{}\r".format(status))
                     break
                 except sp.TimeoutExpired:
