@@ -153,13 +153,43 @@ def make_status_bar(chapters):
     return s
 
 
+def extract_chapter(chap, metadata, fmt, filename, cur=0, tot=0, status=None):
+    args = get_args()
+    vprint(
+        '\033[K[chaps] Extracting chapter "{}"...'.format(
+            chap["tags"]["title"]
+        )
+    )
+    sanitize = lambda v: sanitize_filename(v, args.restrictfilenames)
+    if args.progress:
+        status.chapters.chap = cur
+        status.chapters_progress.set_value((cur - 1) / tot)
+        status.chapters_percent.value = math.ceil((cur - 1) / tot * 100)
+        sys.stdout.write("{}\r".format(status))
+    outfile = gen_filename(args.outtmpl, chap, metadata, fmt)
+    outfile = sanitize(outfile)
+    start = msec_to_hour(int(chap["start"]))
+    end = msec_to_hour(int(chap["end"]))
+    duration = float(chap["end_time"]) - float(chap["start_time"])
+    command = [
+        "-ss",
+        start,
+        "-to",
+        end,
+    ]
+    if args.codeccopy:
+        command += ["-codec", "copy"]
+    run_ffmpeg(
+        filename, outfile, command, duration=duration, status=status,
+    )
+
+
 def split_file_on_chapters(filename, jinfos, chapters=None):
     if chapters is None:
         chapters = get_chapter_from_json(jinfos)
     metadata = get_metadatas_from_json(jinfos)
     fmt = get_format_from_json(jinfos)
     args = get_args()
-    sanitize = lambda v: sanitize_filename(v, args.restrictfilenames)
     nb_chaps = len(args.onlychapters) if args.onlychapters else len(chapters)
 
     oc = args.onlychapters
@@ -173,26 +203,8 @@ def split_file_on_chapters(filename, jinfos, chapters=None):
     status = make_status_bar(working_chapters)
 
     for i, chap in enumerate(working_chapters, start=1):
-        if args.progress:
-            status.chapters.chap = i
-            status.chapters_progress.set_value((i - 1) / nb_chaps)
-            status.chapters_percent.value = math.ceil((i - 1) / nb_chaps * 100)
-        outfile = gen_filename(args.outtmpl, chap, metadata, fmt)
-        outfile = sanitize(outfile)
-        start = msec_to_hour(int(chap["start"]))
-        end = msec_to_hour(int(chap["end"]))
-        duration = float(chap["end_time"]) - float(chap["start_time"])
-        command = [
-            "-ss",
-            start,
-            "-to",
-            end,
-        ]
-        if args.codeccopy:
-            command += ["-codec", "copy"]
-
-        run_ffmpeg(
-            filename, outfile, command, duration=duration, status=status,
+        extract_chapter(
+            chap, metadata, fmt, filename, i, nb_chaps, status=status
         )
     if args.progress:
         status.chapters_progress.set_value(1)
