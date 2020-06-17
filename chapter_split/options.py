@@ -149,7 +149,8 @@ def parse_args():
         dest="njobs",
         metavar="JOBS",
         type=_positive_int,
-        help="Number of jobs to use",
+        help="""Number of jobs to use, if no value is given, the number of jobs
+        will be equal of the number of cores availables""",
     )
 
     verbosity = parser.add_argument_group("verbosity")

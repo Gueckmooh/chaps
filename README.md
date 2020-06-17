@@ -40,6 +40,10 @@ functions and features are strongly inspired by **youtube-dl**.
     -C FILE, --chapter-file FILE
                              Use FILE to get chapters. See "CHAPTER FILE" for
                              more information.
+    -j [JOBS], --jobs [JOBS]
+                             Number of jobs to use, if no value is given, the
+                             number of jobs will be equal of the number of cores
+                             availables
 
 ### Verbosity Options
     -v, --verbose            Makes the program more talkative, duplicate for
