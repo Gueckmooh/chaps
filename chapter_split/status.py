@@ -80,7 +80,6 @@ class Piecewise_Progress(Element):
         name=None
     ):
         super().__init__(value, width=width, fit=fit, name=name)
-        print(nb_pieces)
         self._nb_pieces = nb_pieces
         self._value = [False for i in range(nb_pieces)]
 
