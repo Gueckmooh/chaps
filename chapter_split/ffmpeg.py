@@ -1,5 +1,6 @@
 """FFMPEG module"""
 
+
 import json
 import subprocess as sp
 import sys
@@ -18,8 +19,7 @@ from .util import (
     parse_duration,
 )
 
-from .progress import Progress, Line, Placeholder
-
+from .status import Status, Progress, Text
 
 from .options import get_args
 
@@ -85,16 +85,9 @@ def get_format_from_json(jinfos):
 
 
 def run_ffmpeg(
-    input_path,
-    out_path,
-    opts,
-    dry=False,
-    progress=False,
-    duration=None,
-    line=None,
-    bar=None,
-    percentmsg=None,
+    input_path, out_path, opts, duration=None, status=None,
 ):
+    args = get_args()
     cmd = ["ffmpeg", "-y", "-i", input_path]
     cmd += opts
     cmd += ["-loglevel", "repeat+info", "-progress", "/dev/stdout"]
@@ -102,7 +95,7 @@ def run_ffmpeg(
 
     vvprint("[debug] ffmpeg command line: {}".format(shell_quote(cmd)))
 
-    if not dry:
+    if not args.dryrun:
         p = sp.Popen(
             cmd,
             stdout=sp.PIPE,
@@ -110,18 +103,13 @@ def run_ffmpeg(
             stdin=sp.PIPE,
             universal_newlines=True,
         )
-        if progress:
-            if bar:
-                bar.set_percent(0)
-                percentmsg.set_value(" (  0%)\r")
-            sys.stdout.write("{}\r".format(line))
+        if status:
             while True:
                 try:
                     stdout, stderr = p.communicate(timeout=1)
-                    if bar:
-                        bar.set_percent(100)
-                        percentmsg.set_value(" (100%)")
-                    sys.stdout.write("{}\r".format(line))
+                    if not args.codeccopy:
+                        status.current_progress.set_value(1)
+                    sys.stdout.write("{}\r".format(status))
                     break
                 except sp.TimeoutExpired:
                     while True:
@@ -129,14 +117,9 @@ def run_ffmpeg(
                         li = p.stdout.readline().strip()
                         if "out_time=" in li[:9]:
                             current_duration = parse_duration(li.split("=")[1])
-                            percentage = math.floor(
-                                (current_duration / duration) * 100
-                            )
-                            bar.set_percent(percentage)
-                            percentmsg.set_value(
-                                " ({:3d}%)".format(percentage)
-                            )
-                            sys.stdout.write("{}\r".format(line))
+                            percentage = current_duration / duration
+                            status.current_progress.set_value(percentage)
+                            sys.stdout.write("{}\r".format(status))
                             break
         else:
             stdout, stderr = p.communicate()
@@ -144,6 +127,30 @@ def run_ffmpeg(
             stderr = stderr.decode("utf-8", "replace")
             err(stderr.strip().split("\n")[-1])
             sys.exit(1)
+
+
+def make_status_bar(chapters):
+    args = get_args()
+    nb_chaps = len(chapters)
+    s = None
+    if args.progress:
+        p1 = Text(name="chapters")
+        p1.set_fmt(
+            "Chapter {{chap:{0}d}}/{1}".format(len(str(nb_chaps)), nb_chaps),
+            chap=0,
+        )
+        p2 = Progress(name="chapters_progress")
+        p3 = Text(name="chapters_percent")
+        s = Status(separator=" ", dynamic_width=True)
+        if not args.codeccopy:
+            p3.set_fmt("({value:3d}%): Progress", value=0)
+            p4 = Progress(name="current_progress")
+            s = s + p1 + p2 + p3 + p4
+            return s
+        else:
+            p3.set_fmt("({value:3d}%)", value=0)
+            s = s + p1 + p2 + p3
+    return s
 
 
 def split_file_on_chapters(filename, jinfos, chapters=None):
@@ -154,57 +161,22 @@ def split_file_on_chapters(filename, jinfos, chapters=None):
     args = get_args()
     sanitize = lambda v: sanitize_filename(v, args.restrictfilenames)
     nb_chaps = len(args.onlychapters) if args.onlychapters else len(chapters)
-    i = 1
 
-    line = None
+    oc = args.onlychapters
+    working_chapters = [
+        chap
+        for chap in chapters
+        if (oc and ((chap["id"] + 1) in oc)) or oc is None
+    ]
+
     # Setup progress bar
-    if args.progress:
-        if not args.codeccopy:
-            width, _ = os.get_terminal_size()
-            pchapmsg = "Chapter {0:{1}}/{2} ".format(
-                i, len(str(nb_chaps)), nb_chaps
-            )
-            pchap = Placeholder(len(pchapmsg), value=pchapmsg)
-            pprcntmsg = " (  0%)"
-            pprcnt = Placeholder(len(pprcntmsg), value=pprcntmsg)
-            progress1_width = math.floor(
-                (width - len(pchapmsg) - len(pprcntmsg) - len(": Progress "))
-                / 2
-            )
-            progress1 = Progress(progress1_width)
-            progress2_width = math.ceil(
-                width
-                - len(pchapmsg)
-                - len(pprcntmsg)
-                - len(": Progress ")
-                - progress1_width
-            )
-            progress2 = Progress(progress2_width)
-            line = Line(pchap, progress1, ": Progress ", progress2, pprcnt)
-        else:
-            width, _ = os.get_terminal_size()
-            pchapmsg = "Chapter {0:{1}}/{2} ".format(
-                i, len(str(nb_chaps)), nb_chaps
-            )
-            pchap = Placeholder(len(pchapmsg), value=pchapmsg)
-            progress_width = math.floor((width - len(pchapmsg)))
-            progress1 = Progress(progress_width)
-            line = Line(pchap, progress1)
-            progress2 = None
-            pprcnt = None
-    else:
-        progress2 = None
-        pprcnt = None
+    status = make_status_bar(working_chapters)
 
-    for chap in chapters:
-        if args.onlychapters and (chap["id"] + 1) not in args.onlychapters:
-            continue
+    for i, chap in enumerate(working_chapters, start=1):
         if args.progress:
-            pchap.set_value(
-                "Chapter {0:{1}}/{2} ".format(i, len(str(nb_chaps)), nb_chaps)
-            )
-            progress1.set_percent(math.floor((i / nb_chaps) * 100))
-        i += 1
+            status.chapters.chap = i
+            status.chapters_progress.set_value((i - 1) / nb_chaps)
+            status.chapters_percent.value = math.ceil((i - 1) / nb_chaps * 100)
         outfile = gen_filename(args.outtmpl, chap, metadata, fmt)
         outfile = sanitize(outfile)
         start = msec_to_hour(int(chap["start"]))
@@ -220,18 +192,12 @@ def split_file_on_chapters(filename, jinfos, chapters=None):
             command += ["-codec", "copy"]
 
         run_ffmpeg(
-            filename,
-            outfile,
-            command,
-            dry=args.dryrun,
-            duration=duration,
-            progress=args.progress,
-            line=line,
-            bar=progress2,
-            percentmsg=pprcnt,
+            filename, outfile, command, duration=duration, status=status,
         )
     if args.progress:
-        sys.stdout.write("{}\n".format(line))
+        status.chapters_progress.set_value(1)
+        status.chapters_percent.value = 100
+        sys.stdout.write("{}\n".format(status))
 
 
 def print_chapters(filename, jinfos):
