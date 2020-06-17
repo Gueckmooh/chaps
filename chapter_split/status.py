@@ -69,6 +69,48 @@ class Progress(Element):
         return "[" + "#" * sh + "-" * da + "]"
 
 
+class Piecewise_Progress(Element):
+    def __init__(
+        self,
+        nb_pieces=0,
+        value=[],
+        *,
+        width=0,
+        fit=Element.MAXIMIZED,
+        name=None
+    ):
+        super().__init__(value, width=width, fit=fit, name=name)
+        print(nb_pieces)
+        self._nb_pieces = nb_pieces
+        self._value = [False for i in range(nb_pieces)]
+
+    def set_value(self, id, value):
+        if not isinstance(value, bool):
+            raise StatusException("Value must be boolean")
+        self._value[id] = value
+
+    def set_all_values(self, value):
+        for i in range(len(self._value)):
+            self._value[i - 1] = value
+
+    def __str__(self):
+        w = self._width - 2
+        r = w
+        s = "["
+        for i, v in enumerate(self._value, start=1):
+            c = math.ceil if i % 2 == 0 else math.floor
+            if i == self._nb_pieces:
+                c = lambda _: r
+            n = c(w / self._nb_pieces)
+            r -= n
+            if v:
+                s += "#" * n
+            else:
+                s += "-" * n
+        s += "]"
+        return s
+
+
 class Text(Element):
     LEFT = 0
     RIGHT = 1

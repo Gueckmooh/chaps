@@ -6,6 +6,8 @@ import subprocess as sp
 import sys
 import math
 import os
+import multiprocessing as mp
+import time
 
 from .verbosity import vprint, vvprint, vvvprint, err
 
@@ -19,7 +21,7 @@ from .util import (
     parse_duration,
 )
 
-from .status import Status, Progress, Text
+from .status import Status, Progress, Piecewise_Progress, Text
 
 from .options import get_args
 
@@ -103,7 +105,7 @@ def run_ffmpeg(
             stdin=sp.PIPE,
             universal_newlines=True,
         )
-        if status:
+        if status and args.njobs == 1:
             while True:
                 try:
                     stdout, stderr = p.communicate(timeout=1)
@@ -153,19 +155,45 @@ def make_status_bar(chapters):
     return s
 
 
+def make_multi_status_bar(chapters):
+    args = get_args()
+    nb_chaps = len(chapters)
+    s = None
+    if args.progress:
+        p1 = Text(name="chapters")
+        p1.set_fmt(
+            "Chapter {{chap:{0}d}}/{1}".format(len(str(nb_chaps)), nb_chaps),
+            chap=0,
+        )
+        p2 = Piecewise_Progress(name="chapters_progress", nb_pieces=nb_chaps)
+        p3 = Text(name="chapters_percent")
+        s = Status(separator=" ", dynamic_width=True)
+        p3.set_fmt("({value:3d}%)", value=0)
+        s = s + p1 + p2 + p3
+    return s
+
+
 def extract_chapter(chap, metadata, fmt, filename, cur=0, tot=0, status=None):
     args = get_args()
+    sanitize = lambda v: sanitize_filename(v, args.restrictfilenames)
+
     vprint(
         '\033[K[chaps] Extracting chapter "{}"...'.format(
             chap["tags"]["title"]
         )
     )
-    sanitize = lambda v: sanitize_filename(v, args.restrictfilenames)
-    if args.progress:
+    if args.progress and args.njobs == 1:
         status.chapters.chap = cur
         status.chapters_progress.set_value((cur - 1) / tot)
         status.chapters_percent.value = math.ceil((cur - 1) / tot * 100)
         sys.stdout.write("{}\r".format(status))
+    elif args.progress:
+        with lock:
+            status = shared_status.get()
+            status.chapters.chap += 1
+            sys.stdout.write("{}\r".format(status))
+            shared_status.set(status)
+
     outfile = gen_filename(args.outtmpl, chap, metadata, fmt)
     outfile = sanitize(outfile)
     start = msec_to_hour(int(chap["start"]))
@@ -182,6 +210,21 @@ def extract_chapter(chap, metadata, fmt, filename, cur=0, tot=0, status=None):
     run_ffmpeg(
         filename, outfile, command, duration=duration, status=status,
     )
+    if args.progress and args.njobs != 1:
+        with lock:
+            status = shared_status.get()
+            status.chapters_progress.set_value((cur - 1), True)
+            nb = len([v for v in status.chapters_progress.get_value() if v])
+            status.chapters_percent.value = math.ceil(nb / tot * 100)
+            sys.stdout.write("{}\r".format(status))
+            shared_status.set(status)
+
+
+def init_child(lock_, shared_status_):
+    global lock
+    lock = lock_
+    global shared_status
+    shared_status = shared_status_
 
 
 def split_file_on_chapters(filename, jinfos, chapters=None):
@@ -199,15 +242,38 @@ def split_file_on_chapters(filename, jinfos, chapters=None):
         if (oc and ((chap["id"] + 1) in oc)) or oc is None
     ]
 
-    # Setup progress bar
-    status = make_status_bar(working_chapters)
-
-    for i, chap in enumerate(working_chapters, start=1):
-        extract_chapter(
-            chap, metadata, fmt, filename, i, nb_chaps, status=status
+    if args.njobs == 1:
+        # Setup progress bar
+        status = make_status_bar(working_chapters)
+        for i, chap in enumerate(working_chapters, start=1):
+            extract_chapter(
+                chap, metadata, fmt, filename, i, nb_chaps, status=status
+            )
+    else:
+        vprint(
+            "[chaps] Extracting {} chapters with {} jobs".format(
+                nb_chaps, args.njobs
+            )
         )
+        # Setup progress bar
+        status = make_multi_status_bar(working_chapters)
+        lock = mp.Lock()
+        manager = mp.Manager()
+        shared_status = manager.Value(Status, status)
+        with mp.Pool(
+            args.njobs, initializer=init_child, initargs=(lock, shared_status,)
+        ) as pool:
+            vargs = [
+                (chap, metadata, fmt, filename, i, nb_chaps)
+                for i, chap in enumerate(working_chapters, start=1)
+            ]
+            pool.starmap(extract_chapter, vargs)
+
     if args.progress:
-        status.chapters_progress.set_value(1)
+        if args.njobs == 1:
+            status.chapters_progress.set_value(1)
+        else:
+            status = shared_status.get()
         status.chapters_percent.value = 100
         sys.stdout.write("{}\n".format(status))
 

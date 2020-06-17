@@ -2,6 +2,8 @@
 import argparse
 import sys
 
+from multiprocessing import cpu_count
+
 from .verbosity import warn, err
 from .version import __version__, __commit__, __tag__
 
@@ -18,6 +20,18 @@ def _commasep_intlist(string):
             msg = "in '{}': '{}' is not an integer".format(string, val)
             raise argparse.ArgumentTypeError(msg)
     return ret
+
+
+def _positive_int(val):
+    try:
+        integer = int(val)
+    except ValueError:
+        msg = "'{}' is not an integer".format(val)
+        raise argparse.ArgumentTypeError(msg)
+    if integer < 1:
+        msg = "number of jobs should be positive"
+        raise argparse.ArgumentTypeError(msg)
+    return integer
 
 
 def _filetype(mode):
@@ -123,6 +137,20 @@ def parse_args():
         default=None,
         dest="chapter_file",
         help="""Use FILE to get chapters.""",
+    )
+
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        nargs="?",
+        action="store",
+        const=cpu_count(),
+        default=1,
+        dest="njobs",
+        metavar="JOBS",
+        type=_positive_int,
+        help="""Number of jobs to use, if no value is given, the number of jobs
+        will be equal of the number of cores availables""",
     )
 
     verbosity = parser.add_argument_group("verbosity")
