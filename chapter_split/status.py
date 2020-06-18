@@ -94,18 +94,11 @@ class Piecewise_Progress(Element):
 
     def __str__(self):
         w = self._width - 2
-        r = w
         s = "["
-        for i, v in enumerate(self._value, start=1):
-            c = math.ceil if i % 2 == 0 else math.floor
-            if i == self._nb_pieces:
-                c = lambda _: r
-            n = c(w / self._nb_pieces)
-            r -= n
-            if v:
-                s += "#" * n
-            else:
-                s += "-" * n
+        for i in range(w):
+            p = i / w
+            k = math.floor(p * self._nb_pieces)
+            s += "#" if self._value[k] else "-"
         s += "]"
         return s
 

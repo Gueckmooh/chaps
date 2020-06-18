@@ -7,7 +7,6 @@ import sys
 import math
 import os
 import multiprocessing as mp
-import time
 
 from .verbosity import vprint, vvprint, vvvprint, err
 
