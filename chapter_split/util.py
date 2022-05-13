@@ -3,6 +3,7 @@ import math
 import re
 import itertools
 import sys
+from pathlib import Path
 from shlex import quote
 
 
@@ -121,7 +122,11 @@ def gen_filename(template, chapter, metadata, fmt):
     filename = filename.replace("%(chapter-title)s", chapter["tags"]["title"])
     filename = filename.replace("%(chapter-id)s", str(chapter["id"]))
     filename = filename.replace("%(chapter-index)s", str(chapter["id"] + 1))
-    filename = filename.replace("%(title)s", metadata["title"])
+    if "title" in metadata:
+        filename = filename.replace("%(title)s", metadata["title"])
+    else:
+        file_title = Path(fmt["filename"]).stem
+        filename = filename.replace("%(title)s", file_title)
     filename = filename.replace("%(ext)s", fmt["format_name"])
     return filename
 

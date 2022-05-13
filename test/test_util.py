@@ -253,6 +253,38 @@ class TestJson(unittest.TestCase):
                 util.gen_filename(template, chapter, metadata, fmt), exp
             )
 
+    def test_gen_filename_no_title(self):
+        chapter = {
+            "tags": {"title": "chapter-title"},
+            "id": 340,
+        }
+        metadata = {}
+        fmt = {"filename": "test/media-title.mp3", "format_name": "mp3"}
+        ltest = [
+            (
+                "%(chapter-id)s-%(chapter-title)s.%(ext)s",
+                "340-chapter-title.mp3",
+            ),
+            (
+                "%(chapter-index)s-%(chapter-title)s.%(ext)s",
+                "341-chapter-title.mp3",
+            ),
+            (
+                "%(title)s-%(chapter-index)s.%(chapter-title)s.%(ext)s",
+                "media-title-341.chapter-title.mp3",
+            ),
+        ]
+        for (template, exp) in ltest:
+            print(
+                'Testing\
+                util.gen_filename("{}", chapter, metadata, fmt)'.format(
+                    template
+                )
+            )
+            self.assertEqual(
+                util.gen_filename(template, chapter, metadata, fmt), exp
+            )
+
     def test_get_filesystem_encoding(self):
         encoding = sys.getfilesystemencoding()
         self.assertEqual(util.get_filesystem_encoding(), encoding)
