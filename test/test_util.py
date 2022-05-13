@@ -227,7 +227,7 @@ class TestJson(unittest.TestCase):
             "id": 340,
         }
         metadata = {"title": "media-title"}
-        fmt = {"format_name": "mp3"}
+        fmt = {"filename": "test/media-title.mp3", "format_name": "mp3"}
         ltest = [
             (
                 "%(chapter-id)s-%(chapter-title)s.%(ext)s",

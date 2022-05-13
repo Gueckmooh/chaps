@@ -127,7 +127,8 @@ def gen_filename(template, chapter, metadata, fmt):
     else:
         file_title = Path(fmt["filename"]).stem
         filename = filename.replace("%(title)s", file_title)
-    filename = filename.replace("%(ext)s", fmt["format_name"])
+    extention = Path(fmt["filename"]).suffix[1:]  # remove dot
+    filename = filename.replace("%(ext)s", extention)
     return filename
 
 
